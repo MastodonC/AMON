@@ -1,18 +1,25 @@
-# AMON v3.1
+---
+title: AMON Data Format
+layout: default
+---
+
+# AMON v4.0 Beta
 
 ## <a name="copyright"></a>Copyright
 
-Copyright (c) 2010-2012 AMEE UK Limited.
+Copyright (c) 2010-2012 AMEE UK Limited. and 2014 Mastodon C ltd
 
-<http://amee.github.com/AMON>
+<http://www.github.com/MastodonC/AMON>
 
 ## <a name="abstract"></a>Abstract
 
 AMON is a data format suitable for the description and exchange of metering/monitoring device data. AMON is available to be used, free of charge, by anyone who has a need to describe or exchange, in a computer readable format, metering or monitoring device data.
 
-The AMON standard has been primarily developed by [AMEE UK Limited](http://www.amee.com/) with the assistance of a number of other parties in the metering/monitoring device industry. If you would like to participate in the further development of the AMON standard, please see the [Contributing to AMON](#contribute) section.
+The AMON standard has been primarily developed by [AMEE UK Limited](http://www.amee.com/) and now adapted by [Mastodon C Ltd](http://www.mastodonc.com)  with the assistance of a number of other parties in the metering/monitoring device industry. If you would like to participate in the further development of the AMON standard, please see the [Contributing to AMON](#contribute) section.
 
 AMEE has developed a storage platform for metering/monitoring device data and a RESTful, web-based API for storing and retrieving this data using the AMON data format. However, the use of AMON is not limited to this context, and a key aim of the AMON data format is to advocate an open way of describing and exchanging metering/monitoring data that is independent of any API or system. The use of AMON in metering/monitoring devices and/or other systems is encouraged.
+
+Mastodon C has revised this format to allow the addition of programmes, projects and an expanded entity definition to allow for full management on metering and monitoring projects.
 
 ## <a name="license"></a>License
 
@@ -27,11 +34,12 @@ The AMON standard is licensed under a [Creative Commons Attribution 2.0 UK: Engl
 * [Goals of AMON](#goals)
 * [The AMON Data Format](#data_format)
   * [Data Format Description](#description)
-  * [UUIDs](#UUIDs)
   * [Numbers](#numbers)
   * [Devices](#devices)
   * [Metering Points](#metering_points)
   * [Entities](#entities)
+  * [Projects](#projects)
+  * [Programmes](#programmes)
   * [Standard Reading Types](#reading_types)
 * [Examples](#examples)
 * [References](#references)
@@ -65,10 +73,10 @@ The the full AMON data format is shown below. A [full description of the format]
 
       "devices": [
         {
-          "deviceId": required string UUID,
-          "entityId": required string UUID,
-          "parentId": optional string UUID,
-          "meteringPointId": optional string UUID,
+          "deviceId": required string ID,
+          "entityId": required string ID,
+          "parentId": optional string ID,
+          "meteringPointId": optional string ID,
           "description": optional string,
           "privacy": required string, either "private" or "public",
           "location": {
@@ -106,24 +114,25 @@ The the full AMON data format is shown below. A [full description of the format]
         }
       ],
 
-      "meteringPoints": [
-        {
-          "meteringPointId": required string UUID,
-          "entityId": required string UUID,
-          "description": optional string,
-          "metadata": {
-            optional JSON object
-          }
-        }
-      ],
-
       "entities": [
         {
-          "entityId": required string UUID,
-          "deviceIds": [ optional array of string UUIDs, empty array permitted ],
-          "meteringPointIds": [ optional array of string UUIDs, empty array permitted ]
+          "entityId": required string ID,
+          "projectId": required string ID,
+          "deviceIds": [ optional array of string IDs, empty array permitted ],
         }
       ]
+      
+      "projects" [
+        {
+          "projectId": required string ID,
+          "name": required string
+        }
+
+      "programmes" [
+        {
+          "programmeId": required string ID,
+          "name": required string
+        }
 
     }
 
@@ -134,12 +143,8 @@ The AMON data format describes metering/monitoring devices, their data, and thei
 The AMON data format consists of three main sections:
 
 * **devices**: The "devices" section is used for representing physical or virtual metering/monitoring devices and their data;
-* **meteringPoints**: The "meteringPoints" section is used for representing physical or virtual *metering points* -- that is, physical or virtual points where metering/monitoring is performed (perhaps for billing purposes) but which is desired to be kept separate from a physical or virtual metering/monitoring devices (e.g. so that if a device fails, and needs to be replaced, the "meteringPoint" can remain, and a new "device" can be added to replace the old "device"); or a physical or virtual collection of metering/monitoring devices with a related purpose (e.g. an electrical metering system as a "meteringPoint" with a number of sub-"meters").
 * **entities**: The "entities" section is used for representing real world or virtual *entities* that may relate to "devices" and/or "meteringPoints", such as businesses, properties, buildings, people, universities -- anything, really, that may have a 1:n relationship with "devices" and/or "meteringPoints".
 
-### <a name="UUIDs"></a>UUIDs
-
-Where a string UUID is defined in the data format, a standard Universally Unique Identifier [\[3\]](#3) should be used.
 
 ### <a name="numbers"></a>Numbers
 
@@ -147,14 +152,14 @@ Where a number is defined in the data format, positive and negative integers and
 
 ### <a name="devices"></a>Devices
 
-In the AMON data format, the "devices" section is used to represent physical or virtual metering/monitoring devices and their data. This is done via three sub-sections. Firstly, a series of fields that define details about the physical or virtual device itself, such as a UUID for the "device", if the device's data should be considered to be public or private, the location of the device, and optional metadata about the device. Secondly, a series of fields (the "readings" section) which defines *what* the device records measurements of -- so, for example, if a device monitors temperature and relative humidity, then the "readings" section would define this. Finally, a series of fields (the "measurements" section) which defines actual metering/monitoring data from the device.
+In the AMON data format, the "devices" section is used to represent physical or virtual metering/monitoring devices and their data. This is done via three sub-sections. Firstly, a series of fields that define details about the physical or virtual device itself, such as a ID for the "device", if the device's data should be considered to be public or private, the location of the device, and optional metadata about the device. Secondly, a series of fields (the "readings" section) which defines *what* the device records measurements of -- so, for example, if a device monitors temperature and relative humidity, then the "readings" section would define this. Finally, a series of fields (the "measurements" section) which defines actual metering/monitoring data from the device.
 
 All of the fields for the "devices" section of the AMON data format are discussed in more detail below.
 
-* **deviceId**: A UUID for the "device". Required for a "device"; however, systems that implement the AMON data format may relax this requirement to make the field optional for AMON formatted messages that are requesting that a "device" be created.
-* **parentId**: A UUID for the device's "parent". Presence of this value indicates this device is a sub-meter.
+* **deviceId**: A ID for the "device". Required for a "device"; however, systems that implement the AMON data format may relax this requirement to make the field optional for AMON formatted messages that are requesting that a "device" be created.
+* **parentId**: A ID for the device's "parent". Presence of this value indicates this device is a sub-meter.
 * **description**: An optional textual description of the device. Commonly used for an in-house device ID and/or other useful identifier.
-* **meteringPointId**: An optional UUID of a "meteringPoint", if this "device" is to be considered part of that "meteringPoint".
+* **meteringPointId**: An optional ID of a "meteringPoint", if this "device" is to be considered part of that "meteringPoint".
 * **privacy**: Should the information about this device and its data be considered private, or public? Optional -- systems that implement the AMON data format should assume a default of "private" if not specified.
 * **location**:
   * **name**: Optional textual description of the location of the "device".
@@ -180,25 +185,30 @@ All of the fields for the "devices" section of the AMON data format are discusse
   * **error**: Optional string, describing an error condition if no "value" is present.
   * **aggregated**: Optional boolean, set to true if the measurement data being described/exchanged has been aggregated (i.e. is not individual raw data values, but has been aggregated to reduce the number of "measurement" items that need to be listed).
 
-### <a name="metering_points"></a>Metering Points
-
-In the AMON data format, the "meteringPoints" section is used to represent physical or virtual metering points. Note that because the relationship between a "device" and a "meteringPoint" is defined in the "device" section of the data format, a "meteringPoint" may have one or more "devices"; but a "device" may belong to at most one "meteringPoint".
-
-All of the fields for the "meteringPoints" section of the AMON data format are discussed in more detail below.
-
-* **meteringPointId**: A UUID for the "meteringPoint". Required for a "meteringPoint"; however, systems that implement the AMON data format may relax this requirement to make the field optional for AMON formatted messages that are requesting that a "meteringPoint" be created.
-* **description**: An optional textual description of the metering point.
-* **metadata**: An optional JSON object of metadata about the "meteringPoint". This allows the AMON data format to handle any type of metadata relating to the "device".
-
 ### <a name="entities"></a>Entities
 
 In the AMON data format, the "entities" section is used to represent physical or virtual entities which may have a relationship with a "device" or "meteringPoint".
 
 All of the fields for the "entities" section of the AMON data format are discussed in more detail below.
 
-* **entityId**: A UUID for the "entity". Required for an "entity"; however, systems that implement the AMON data format may relax this requirement to make the field optional for AMON formatted messages that are requesting than an "entity" be created.
-* **deviceIds**: An array of "device" UUIDs, representing the "devices" that belong to the "entity".
-* **meteringPointIds**: An array of "meteringPoint" UUIDs, representing the "meteringPoints" that belong to the "entity".
+* **entityId**: A ID for the "entity". Required for an "entity"; however, systems that implement the AMON data format may relax this requirement to make the field optional for AMON formatted messages that are requesting than an "entity" be created.
+* **projectId** An ID for the project this entity belongs to.
+* **deviceIds**: An array of "device" IDs, representing the "devices" that belong to the "entity".
+* **meteringPointIds**: An array of "meteringPoint" IDs, representing the "meteringPoints" that belong to the "entity".
+
+### <a name="projects"></a>Projects
+
+In the AMON data format the "projects" section is used as a way of grouping entities together. This allows for access control and as a way of comparing within and between projects as a part of data analysis.
+
+* **name** A name for the project that is unique through the system
+* **projectId** A unique identifier for the project.
+
+### <a name="programmes"></a>Programmes
+
+In the AMON data format the "programmes" section is used as a way of grouping projects together. This allows for access control and can help with broader data analysis.
+
+* **name** A name for the programme
+* **programmeId** an unique identifier for the programme.
 
 ### <a name="reading_types"></a>Standard Reading Types
 
@@ -263,9 +273,9 @@ Each of the standard "types" below is listed with a proposed default "reading" "
 
 ### Example 1 - Temperature readings
 
-This example shows a "device", with UUID "d46ec860-fc7d-012c-25a6-0017f2cd3574".
+This example shows a "device", with ID "d46ec860-fc7d-012c-25a6-0017f2cd3574".
 
-The device is associated with the entity with UUID "50af27e0-e61a-11e1-aff1-0800200c9a66".
+The device is associated with the entity with ID "50af27e0-e61a-11e1-aff1-0800200c9a66".
 
 The "device" has a "location", and has been defined with one "reading".
 
@@ -303,62 +313,12 @@ Two "measurements" for the defined "reading" exist.
       ]
     }
 
-### Example 2 - Electricity readings with associated metering point
-
-This example shows a "device", with UUID "c1810810-0381-012d-25a8-0017f2cd3574", as well as a "meteringPoint" with UUID "c1759810-90f3-012e-0404-34159e211070".
-
-The device is associated with the entity with UUID "50af27e0-e61a-11e1-aff1-0800200c9a66".
-
-The "device" belongs to the "meteringPoint", and has been defined with two "readings".
-
-One "measurements" for each of the defined "readings" exist.
-
-    {
-      "devices": [
-        {
-          "deviceId": "c1810810-0381-012d-25a8-0017f2cd3574",
-          "entityId": "50af27e0-e61a-11e1-aff1-0800200c9a66",
-          "description": "Example 2 Device",
-          "meteringPointId": "c1759810-90f3-012e-0404-34159e211070",
-          "readings": [
-            {
-              "type": "apparentPower",
-              "unit": "kVAh",
-              "accuracy": 0.01
-            },
-            {
-              "type": "reactivePower",
-              "unit": "kVArh",
-              "accuracy": 0.2
-            }
-          ],
-          "measurements": [
-            {
-              "type": "apparentPower",
-              "timestamp": "2010-07-02T11:39:09Z",
-              "value": 7.23
-            },
-            {
-              "type": "reactivePower",
-              "timestamp": "2010-07-02T11:44:09Z",
-              "value": 6.8
-            }
-          ]
-        }
-      ],
-      "meteringPoints": [
-        {
-          "meteringPointId": "c1759810-90f3-012e-0404-34159e211070",
-          "description": "Example 2 Metering Point"
-        }
-      ]
-    }
 
 ### Example 3 - Wind turbine measurements
 
-This example shows two "devices", the first with UUID "82621440-fc7f-012c-25a6-0017f2cd3574" and the second with UUID "d1635430-0381-012d-25a8-0017f2cd3574".
+This example shows two "devices", the first with ID "82621440-fc7f-012c-25a6-0017f2cd3574" and the second with ID "d1635430-0381-012d-25a8-0017f2cd3574".
 
-The devices are associated with the entity with UUID "50af27e0-e61a-11e1-aff1-0800200c9a66".
+The devices are associated with the entity with ID "50af27e0-e61a-11e1-aff1-0800200c9a66".
 
 The first "device" has been defined with three different "readings", and one "measurements" for each of the defined "readings" exist.
 
@@ -419,11 +379,11 @@ The second "device" has been defined with one "reading", and one "measurements" 
       ]
     }
 
-### Example 4 - Associating devices and metering points with an entity
+### Example 4 - Associating devices with an entity
 
-This example shows an "entity", with UUID "0636240-0381-012d-25a8-0017f2cd3574".
+This example shows an "entity", with ID "0636240-0381-012d-25a8-0017f2cd3574".
 
-The entity is defined as being associated with two "devices", those with UUIDs "c1810810-0381-012d-25a8-0017f2cd3574" and "d46ec860-fc7d-012c-25a6-0017f2cd3574", and also with one "meteringPoint", with UUID "c1759810-90f3-012e-0404-34159e211070".
+The entity is defined as being associated with two "devices", those with IDs "c1810810-0381-012d-25a8-0017f2cd3574" and "d46ec860-fc7d-012c-25a6-0017f2cd3574".
 
     {
       "entities": [
@@ -434,18 +394,15 @@ The entity is defined as being associated with two "devices", those with UUIDs "
             "c1810810-0381-012d-25a8-0017f2cd3574",
             "d46ec860-fc7d-012c-25a6-0017f2cd3574"
           ],
-          "meteringPointIds": [
-            "c1759810-90f3-012e-0404-34159e211070"
-          ]
         }
       ]
     }
 
 ### Example 5 - Non-numeric measurements
 
-This example shows a "device", with UUID "ed221bf0-d075-012d-287e-0017f2cd3574".
+This example shows a "device", with ID "ed221bf0-d075-012d-287e-0017f2cd3574".
 
-The device is associated with the entity with UUID "50af27e0-e61a-11e1-aff1-0800200c9a66".
+The device is associated with the entity with ID "50af27e0-e61a-11e1-aff1-0800200c9a66".
 
 The "device" has been defined with one "reading", and two "measurements" for that "readings" exists. Note, however, that the "value" of the "measurements" in this case are boolean values.
 
@@ -488,13 +445,13 @@ The "device" has been defined with one "reading", and two "measurements" for tha
 
 ### <a name="history"></a>Revision History
 
-<<<<<<< HEAD
-* Version 3.0:
-=======
+* Version 4.0: 2014-05-18 - Bruce Durling, Mastodon C
+  * Remove metering points
+  * Add programmes and projects
+  * IDs may now be SHAs rather than UUIDs.
 * Version 3.1:
   * Updated standard reading types.
 * Version 3.0:
->>>>>>> a32fd12... Update standard reading types. MM-749
   * Changed Meters to Devices.
   * Added some new fields.
   * Updated standard reading types.
@@ -537,10 +494,11 @@ Contributions to the AMON data format are welcome! If you would like to particip
 
 ### <a name="contributors"></a>Contributors
 
-* Diggory Briercliffe
-* Paul Carey <paul.p.carey@gmail.com>
+* Andrew Hill
 * Bo Fussing
-* Andrew Hill <andrew.hill@amee.com>
-* David Keen <david.keen@amee.com>
-* Jon Leighton
+* Bruce Durling <bruce@mastodonc.com>
+* David Keen
+* Diggory Briercliffe
 * John Nunn
+* Jon Leighton
+* Paul Carey <paul.p.carey@gmail.com>
